@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { VictoryScreen } from "../components/VictoryScreen";
 
 type CellType = "empty" | "comum" | "bacteria" | "aliada";
 
@@ -518,40 +519,27 @@ export default function FaseBonusWhack() {
       </AnimatePresence>
 
       {gameOver && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: "rgba(0,0,0,0.92)" }}>
-          <h1 className="text-6xl font-bold mb-4" style={{ color: "#ef4444" }}>
-            Organismo Comprometido!
-          </h1>
-          <p className="text-xl mb-2 text-gray-300">Os invasores venceram desta vez.</p>
-          <p className="text-3xl font-bold mb-8" style={{ color: "#facc15" }}>
-            Pontuação: {score}
-          </p>
-          <div className="flex gap-4">
-            <Button onClick={() => window.location.reload()} data-testid="button-retry">
-              Tentar Novamente
-            </Button>
-            <Button variant="outline" onClick={() => setLocation("/")} data-testid="button-menu">
-              Menu Principal
-            </Button>
-          </div>
-        </div>
+        <VictoryScreen
+          hp={hp}
+          leucocitos={0}
+          phaseId="bonus"
+          phaseTitle="Fase Bônus: Ataque Relâmpago"
+          isGameOver
+          bonusScore={score}
+          onMenu={() => setLocation("/")}
+          onRetry={() => window.location.reload()}
+        />
       )}
 
       {victory && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center" style={{ background: "rgba(0,0,0,0.92)" }}>
-          <h1 className="text-6xl font-bold mb-4" style={{ color: "#4ade80" }}>
-            Sobreviveu!
-          </h1>
-          <p className="text-xl mb-2 text-gray-300">
-            O organismo resistiu ao ataque relâmpago!
-          </p>
-          <p className="text-3xl font-bold mb-8" style={{ color: "#facc15" }}>
-            Pontuação Final: {score}
-          </p>
-          <Button onClick={() => setLocation("/")} data-testid="button-menu-victory">
-            Menu Principal
-          </Button>
-        </div>
+        <VictoryScreen
+          hp={hp}
+          leucocitos={0}
+          phaseId="bonus"
+          phaseTitle="Fase Bônus: Ataque Relâmpago"
+          bonusScore={score}
+          onMenu={() => setLocation("/")}
+        />
       )}
     </div>
   );
