@@ -190,7 +190,8 @@ function GamePhase({ params }: { params: { id: string } }) {
   const [selectedTower, setSelectedTower] = useState<TowerType | null>(null);
   const [showMinigame, setShowMinigame] = useState(false);
   const [showTutorial, setShowTutorial] = useState(true);
-  const [vaccineAssembled, setVaccineAssembled] = useState(false);
+  // Phase 3 auto-activates influenza vaccine — no mandatory assembly needed before wave 1
+  const [vaccineAssembled, setVaccineAssembled] = useState(phase?.id === "3");
 
   const needsVaccineFirst = !!(
     phase?.vaccineTarget &&
@@ -204,10 +205,10 @@ function GamePhase({ params }: { params: { id: string } }) {
     vaccineAssembled
   );
 
+  // Phase 3: influenza vaccine is pre-active (carried over from phase 2's lesson)
   useEffect(() => {
     if (phase?.id === "3" && !game.vaccinesActive.includes("influenza")) {
       game.setVaccinesActive(v => [...v, "influenza"]);
-      setVaccineAssembled(true);
     }
   }, [phase?.id]);
 
@@ -282,14 +283,21 @@ function GamePhase({ params }: { params: { id: string } }) {
             );
           })}
 
-          {(phase.id === "2" || phase.id === "4") && !game.vaccinesActive.includes(phase.vaccineTarget!) && (
-            <Button
-              className="w-full mt-2 bg-primary text-primary-foreground hover:bg-primary/80 bio-glow"
-              onClick={() => setShowMinigame(true)}
-              data-testid="button-vaccine"
-            >
-              💉 Desenvolver Vacina
-            </Button>
+          {phase.vaccineTarget && !game.vaccinesActive.includes(phase.vaccineTarget) && (
+            <div className="mt-2 flex flex-col gap-2">
+              {phase.vaccineHint && (
+                <div className="text-xs p-2 rounded-lg border border-yellow-900/40 bg-yellow-950/20 text-yellow-300">
+                  💡 {phase.vaccineHint}
+                </div>
+              )}
+              <Button
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/80 bio-glow"
+                onClick={() => setShowMinigame(true)}
+                data-testid="button-vaccine"
+              >
+                💉 Desenvolver Vacina
+              </Button>
+            </div>
           )}
 
           {game.vaccinesActive.length > 0 && (
@@ -440,7 +448,7 @@ function GamePhase({ params }: { params: { id: string } }) {
 
       {/* Tutorial */}
       {showTutorial && (
-        <TutorialGuide phase={phase} onComplete={() => setShowTutorial(false)} />
+        <TutorialGuide phase={phase} onComplete={() => setShowTutorial(false)} skippable={phase.id !== "1"} />
       )}
 
       {/* Vaccine Minigame */}

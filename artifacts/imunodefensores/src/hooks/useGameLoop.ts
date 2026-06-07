@@ -113,7 +113,9 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
     // Prep phase countdown (auto-wave spawning)
     if (isPrepPhaseRef.current && !waveRunningRef.current) {
       // Phase 2: don't count down until vaccine is assembled
-      const needsVaccineFirst = phase.vaccineTarget &&
+      // Only phase 2 blocks the countdown until vaccine is assembled
+      const needsVaccineFirst = phase.id === "2" &&
+        phase.vaccineTarget &&
         waveIndexRef.current === -1 &&
         !vaccinesActiveRef.current.includes(phase.vaccineTarget) &&
         !vaccineReadyRef.current;

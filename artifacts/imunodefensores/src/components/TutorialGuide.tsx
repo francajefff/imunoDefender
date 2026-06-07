@@ -5,6 +5,7 @@ import { PhaseDef, TOWER_DEFS, ENEMY_DEFS } from "../lib/constants";
 interface Props {
   phase: PhaseDef;
   onComplete: () => void;
+  skippable?: boolean;
 }
 
 interface Step {
@@ -41,7 +42,7 @@ function EnemyCard({ color, name, description }: { color: string; name: string; 
   );
 }
 
-export function TutorialGuide({ phase, onComplete }: Props) {
+export function TutorialGuide({ phase, onComplete, skippable = false }: Props) {
   const [step, setStep] = useState(0);
 
   const steps: Step[] = [
@@ -291,49 +292,62 @@ export function TutorialGuide({ phase, onComplete }: Props) {
           </div>
 
           {/* Footer */}
-          <div className="px-6 pb-5 flex items-center justify-between">
-            <button
-              onClick={() => setStep(s => Math.max(0, s - 1))}
-              disabled={step === 0}
-              className="text-sm px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              ← Anterior
-            </button>
+          <div className="px-6 pb-5 flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setStep(s => Math.max(0, s - 1))}
+                disabled={step === 0}
+                className="text-sm px-4 py-2 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-white/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ← Anterior
+              </button>
 
-            {/* Dots */}
-            <div className="flex gap-1.5">
-              {steps.map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-full transition-all duration-200"
-                  style={{
-                    width: i === step ? 20 : 6,
-                    height: 6,
-                    background: i === step ? "#06b6d4" : i < step ? "#ffffff50" : "#ffffff20",
-                  }}
-                />
-              ))}
+              {/* Dots */}
+              <div className="flex gap-1.5">
+                {steps.map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-full transition-all duration-200"
+                    style={{
+                      width: i === step ? 20 : 6,
+                      height: 6,
+                      background: i === step ? "#06b6d4" : i < step ? "#ffffff50" : "#ffffff20",
+                    }}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  if (isLast) {
+                    onComplete();
+                  } else {
+                    setStep(s => s + 1);
+                  }
+                }}
+                className="text-sm px-5 py-2 rounded-lg font-bold transition-all"
+                style={{
+                  background: isLast
+                    ? "linear-gradient(135deg, #22c55e, #16a34a)"
+                    : "linear-gradient(135deg, #06b6d4, #3b82f6)",
+                  color: "white",
+                  boxShadow: isLast ? "0 0 20px rgba(34,197,94,0.4)" : "0 0 20px rgba(6,182,212,0.4)",
+                }}
+              >
+                {isLast ? "🎮 Jogar!" : "Próximo →"}
+              </button>
             </div>
 
-            <button
-              onClick={() => {
-                if (isLast) {
-                  onComplete();
-                } else {
-                  setStep(s => s + 1);
-                }
-              }}
-              className="text-sm px-5 py-2 rounded-lg font-bold transition-all"
-              style={{
-                background: isLast
-                  ? "linear-gradient(135deg, #22c55e, #16a34a)"
-                  : "linear-gradient(135deg, #06b6d4, #3b82f6)",
-                color: "white",
-                boxShadow: isLast ? "0 0 20px rgba(34,197,94,0.4)" : "0 0 20px rgba(6,182,212,0.4)",
-              }}
-            >
-              {isLast ? "🎮 Jogar!" : "Próximo →"}
-            </button>
+            {skippable && (
+              <div className="flex justify-center">
+                <button
+                  onClick={onComplete}
+                  className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 transition-colors"
+                >
+                  Pular Guia →
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       </AnimatePresence>
