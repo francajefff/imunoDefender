@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "ImunoDefensores"
+version = "1.0.0"
+id = "artifacts/imunodefensores"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25956
+
+[services.development]
+run = "pnpm --filter @workspace/imunodefensores run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/imunodefensores", "run", "build" ]
+publicDir = "artifacts/imunodefensores/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25956"
+BASE_PATH = "/"
