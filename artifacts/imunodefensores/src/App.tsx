@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { PHASES, GAME_MAP, TOWER_DEFS, TowerType } from "./lib/constants";
 import { useGameLoop } from "./hooks/useGameLoop";
 import { motion, AnimatePresence } from "framer-motion";
+import FaseBonusWhack from "./pages/FaseBonusWhack";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,7 @@ function MainMenu() {
           Defenda o corpo humano contra invasores virais e bacterianos. Aprenda como as vacinas salvam vidas!
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {Object.values(PHASES).map(p => (
             <Card key={p.id} className="p-4 bg-card/80 border-primary/20 hover:border-primary transition-colors cursor-pointer"
                   onClick={() => setLocation(`/fase/${p.id}`)}>
@@ -32,6 +33,28 @@ function MainMenu() {
             </Card>
           ))}
         </div>
+        <Card
+          className="p-4 mb-8 cursor-pointer transition-all border-2 hover:scale-[1.02]"
+          style={{
+            background: "rgba(80,0,0,0.4)",
+            borderColor: "rgba(239,68,68,0.5)",
+            boxShadow: "0 0 24px rgba(239,68,68,0.2)",
+          }}
+          onClick={() => setLocation("/fase/bonus")}
+          data-testid="card-fase-bonus"
+        >
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">⚡</div>
+            <div>
+              <h3 className="text-lg font-bold" style={{ color: "#f87171" }}>
+                Fase Bônus: Ataque Relâmpago
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Reflexos em ação! Destrua vírus antes que escapem — mas não ataque as células aliadas do corpo!
+              </p>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
@@ -331,6 +354,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={MainMenu} />
+      <Route path="/fase/bonus" component={FaseBonusWhack} />
       <Route path="/fase/:id" component={GamePhase} />
       <Route>404 Não Encontrado</Route>
     </Switch>
