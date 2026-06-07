@@ -489,7 +489,9 @@ function Router() {
     <Switch>
       <Route path="/" component={MainMenu} />
       <Route path="/fase/bonus" component={FaseBonusWhack} />
-      <Route path="/fase/:id" component={GamePhase} />
+      <Route path="/fase/:id">
+        {(params) => params ? <GamePhase key={params.id} params={params} /> : null}
+      </Route>
       <Route>404 Não Encontrado</Route>
     </Switch>
   );

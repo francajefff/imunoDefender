@@ -83,14 +83,22 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
   const spawnWave = useCallback((index: number) => {
     const wave = phase.waves[index];
     if (!wave) return;
+    // Scale enemy count and spawn speed per wave (each wave is ~25% more numerous and faster)
+    const countMult = 1 + index * 0.25;
+    const intervalMult = Math.max(0.5, 1 - index * 0.1);
     let queue: {type: EnemyType, time: number}[] = [];
+    let cursor = 0;
     wave.enemies.forEach(we => {
-      for (let i = 0; i < we.count; i++) {
-        queue.push({ type: we.type, time: i * wave.interval });
+      const scaledCount = Math.round(we.count * countMult);
+      const scaledInterval = Math.round(wave.interval * intervalMult);
+      for (let i = 0; i < scaledCount; i++) {
+        queue.push({ type: we.type, time: cursor });
+        cursor += scaledInterval;
       }
     });
     queue.sort((a, b) => a.time - b.time);
     waveState.current = { queue, timeToNext: queue.length > 0 ? queue[0].time : 0 };
+    // Store index so enemy spawn can read it for HP/speed scaling
     waveIndexRef.current = index;
     waveRunningRef.current = true;
     setWaveIndex(index);
@@ -135,13 +143,19 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
         const toSpawn = waveState.current.queue.shift()!;
         const start = GAME_MAP.path[0];
         const eDef = ENEMY_DEFS[toSpawn.type];
+        // HP scales +30% per wave, speed scales +10% per wave
+        const waveIdx = waveIndexRef.current;
+        const hpScale = 1 + waveIdx * 0.3;
+        const speedScale = 1 + waveIdx * 0.1;
+        const scaledHp = Math.round(eDef.hp * hpScale);
+        const scaledDef = { ...eDef, speed: eDef.speed * speedScale };
         enemiesRef.current.push({
           id: Math.random().toString(),
           x: start.x * GAME_MAP.tileSize + GAME_MAP.tileSize / 2,
           y: start.y * GAME_MAP.tileSize + GAME_MAP.tileSize / 2,
-          def: eDef,
-          hp: eDef.hp,
-          maxHp: eDef.hp,
+          def: scaledDef,
+          hp: scaledHp,
+          maxHp: scaledHp,
           pathIndex: 0,
           distanceToNext: 0
         });
