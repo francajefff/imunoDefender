@@ -41,21 +41,109 @@ export interface MapData {
   width: number;
   height: number;
   tileSize: number;
-  path: { x: number, y: number }[];
+  path: { x: number; y: number }[];
 }
 
-export const GAME_MAP: MapData = {
-  width: 12,
-  height: 9,
-  tileSize: 60,
-  path: [
-    {x: 0, y: 2}, {x: 3, y: 2}, {x: 3, y: 5}, {x: 7, y: 5},
-    {x: 7, y: 1}, {x: 10, y: 1}, {x: 10, y: 7}, {x: 11, y: 7}
-  ]
+// ─── Per-phase maps — each with a unique, longer path ────────────────────────
+//
+//  All maps are 13 × 10 tiles (tileSize = 60 → 780 × 600 px logical).
+//  Path waypoints are corners; segments between them are straight H or V lines.
+//
+//  Phase 1 — S-curve (beginner)
+//    Entry (0,4) ─right→ (4,4) ─up→ (4,1) ─right→ (8,1) ─down→ (8,8) ─right→ (12,8)
+//
+//  Phase 2 — Z-zigzag (intermediate)
+//    Entry (0,1) ─right→ (5,1) ─down→ (5,5) ─left→ (1,5) ─down→ (1,8) ─right→ (10,8) ─up→ (10,3) ─right→ (12,3)
+//
+//  Phase 3 — Comb/spiral (advanced)
+//    Entry (0,7) ─right→ (1,7) ─up→ (1,2) ─right→ (4,2) ─down→ (4,8) ─right→ (8,8) ─up→ (8,3) ─right→ (12,3)
+//
+//  Phase 4 — Double-back (expert)
+//    Entry (0,3) ─right→ (3,3) ─down→ (3,7) ─right→ (7,7) ─up→ (7,2) ─right→ (10,2) ─down→ (10,7) ─right→ (12,7)
+
+export const PHASE_MAPS: Record<string, MapData> = {
+  "1": {
+    width: 13, height: 10, tileSize: 60,
+    path: [
+      { x: 0, y: 4 }, { x: 4, y: 4 }, { x: 4, y: 1 },
+      { x: 8, y: 1 }, { x: 8, y: 8 }, { x: 12, y: 8 },
+    ],
+  },
+  "2": {
+    width: 13, height: 10, tileSize: 60,
+    path: [
+      { x: 0, y: 1 }, { x: 5, y: 1 }, { x: 5, y: 5 },
+      { x: 1, y: 5 }, { x: 1, y: 8 }, { x: 10, y: 8 },
+      { x: 10, y: 3 }, { x: 12, y: 3 },
+    ],
+  },
+  "3": {
+    width: 13, height: 10, tileSize: 60,
+    path: [
+      { x: 0, y: 7 }, { x: 1, y: 7 }, { x: 1, y: 2 },
+      { x: 4, y: 2 }, { x: 4, y: 8 }, { x: 8, y: 8 },
+      { x: 8, y: 3 }, { x: 12, y: 3 },
+    ],
+  },
+  "4": {
+    width: 13, height: 10, tileSize: 60,
+    path: [
+      { x: 0, y: 3 }, { x: 3, y: 3 }, { x: 3, y: 7 },
+      { x: 7, y: 7 }, { x: 7, y: 2 }, { x: 10, y: 2 },
+      { x: 10, y: 7 }, { x: 12, y: 7 },
+    ],
+  },
 };
 
+// Fallback (used wherever no phase id is available)
+export const GAME_MAP: MapData = PHASE_MAPS["1"];
+
+// ─── Path helpers ─────────────────────────────────────────────────────────────
+
+/** Expand waypoint path into the full set of tile coordinates along every segment. */
+export function getPathTiles(path: { x: number; y: number }[]): Set<string> {
+  const tiles = new Set<string>();
+  for (let i = 0; i < path.length - 1; i++) {
+    const from = path[i];
+    const to   = path[i + 1];
+    if (from.x === to.x) {
+      const minY = Math.min(from.y, to.y);
+      const maxY = Math.max(from.y, to.y);
+      for (let y = minY; y <= maxY; y++) tiles.add(`${from.x},${y}`);
+    } else {
+      const minX = Math.min(from.x, to.x);
+      const maxX = Math.max(from.x, to.x);
+      for (let x = minX; x <= maxX; x++) tiles.add(`${x},${from.y}`);
+    }
+  }
+  return tiles;
+}
+
+/** Return tiles immediately adjacent (N/S/E/W) to the path — the only valid build zones. */
+export function getAdjacentTiles(
+  pathTiles: Set<string>,
+  width: number,
+  height: number,
+): Set<string> {
+  const adjacent = new Set<string>();
+  const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+  pathTiles.forEach(key => {
+    const [x, y] = key.split(',').map(Number);
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx >= 0 && nx < width && ny >= 0 && ny < height && !pathTiles.has(`${nx},${ny}`)) {
+        adjacent.add(`${nx},${ny}`);
+      }
+    }
+  });
+  return adjacent;
+}
+
+// ─── Wave / Phase definitions ─────────────────────────────────────────────────
+
 export interface Wave {
-  enemies: { type: EnemyType, count: number }[];
+  enemies: { type: EnemyType; count: number }[];
   interval: number;
 }
 
@@ -84,7 +172,7 @@ export const PHASES: Record<string, PhaseDef> = {
       { enemies: [{ type: "sarampo", count: 8  }], interval: 900 },
       { enemies: [{ type: "sarampo", count: 13 }], interval: 750 },
       { enemies: [{ type: "sarampo", count: 20 }], interval: 600 },
-    ]
+    ],
   },
   "2": {
     id: "2",
@@ -100,7 +188,7 @@ export const PHASES: Record<string, PhaseDef> = {
       { enemies: [{ type: "influenza", count: 14 }], interval: 750 },
       { enemies: [{ type: "influenza", count: 8 }, { type: "sarampo", count: 6 }], interval: 700 },
       { enemies: [{ type: "influenza", count: 20 }], interval: 600 },
-    ]
+    ],
   },
   "3": {
     id: "3",
@@ -116,7 +204,7 @@ export const PHASES: Record<string, PhaseDef> = {
       { enemies: [{ type: "pneumococo", count: 7  }], interval: 1800 },
       { enemies: [{ type: "influenza",  count: 12 }, { type: "pneumococo", count: 5  }], interval: 900 },
       { enemies: [{ type: "pneumococo", count: 10 }, { type: "sarampo",    count: 10 }], interval: 750 },
-    ]
+    ],
   },
   "4": {
     id: "4",
@@ -134,6 +222,6 @@ export const PHASES: Record<string, PhaseDef> = {
       { enemies: [{ type: "rotavirus",  count: 30 }],                                   interval: 320 },
       { enemies: [{ type: "sarampo",    count: 12 }, { type: "influenza",  count: 12 },
                   { type: "rotavirus",  count: 20 }],                                   interval: 550 },
-    ]
-  }
+    ],
+  },
 };

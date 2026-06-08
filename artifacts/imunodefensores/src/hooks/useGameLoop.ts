@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { EnemyDef, ENEMY_DEFS, TowerDef, TOWER_DEFS, GAME_MAP, PhaseDef, EnemyType, TowerType } from '../lib/constants';
+import { EnemyDef, ENEMY_DEFS, TowerDef, TOWER_DEFS, PHASE_MAPS, PhaseDef, EnemyType, TowerType } from '../lib/constants';
 
 export interface Entity {
   id: string;
@@ -107,6 +107,8 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
     setWaveRunning(true);
   }, [phase]);
 
+  const gameMap = PHASE_MAPS[phase.id] ?? PHASE_MAPS["1"];
+
   const loop = useCallback((time: number) => {
     if (gameOverRef.current || victoryRef.current) return;
     const dt = Math.min(time - lastTimeRef.current, 100);
@@ -144,7 +146,7 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
       waveState.current.timeToNext -= dt;
       if (waveState.current.timeToNext <= 0) {
         const toSpawn = waveState.current.queue.shift()!;
-        const start   = GAME_MAP.path[0];
+        const start   = gameMap.path[0];
         const eDef    = ENEMY_DEFS[toSpawn.type];
         const waveIdx = waveIndexRef.current;
         const hpScale    = 1 + waveIdx * 0.3;
@@ -153,8 +155,8 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
         const scaledDef  = { ...eDef, speed: eDef.speed * speedScale };
         enemiesRef.current.push({
           id: Math.random().toString(),
-          x: start.x * GAME_MAP.tileSize + GAME_MAP.tileSize / 2,
-          y: start.y * GAME_MAP.tileSize + GAME_MAP.tileSize / 2,
+          x: start.x * gameMap.tileSize + gameMap.tileSize / 2,
+          y: start.y * gameMap.tileSize + gameMap.tileSize / 2,
           def: scaledDef, hp: scaledHp, maxHp: scaledHp,
           pathIndex: 0, distanceToNext: 0,
         });
@@ -190,14 +192,14 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
     }
 
     // ── Move enemies ────────────────────────────────────────────────────────
-    const path = GAME_MAP.path;
+    const path = gameMap.path;
     const nextEnemies: Enemy[] = [];
     let damageToPlayer = 0;
     enemiesRef.current.forEach(enemy => {
       const targetPt = path[enemy.pathIndex + 1];
       if (targetPt) {
-        const tx = targetPt.x * GAME_MAP.tileSize + GAME_MAP.tileSize / 2;
-        const ty = targetPt.y * GAME_MAP.tileSize + GAME_MAP.tileSize / 2;
+        const tx = targetPt.x * gameMap.tileSize + gameMap.tileSize / 2;
+        const ty = targetPt.y * gameMap.tileSize + gameMap.tileSize / 2;
         const dx = tx - enemy.x;
         const dy = ty - enemy.y;
         const dist  = Math.sqrt(dx * dx + dy * dy);
@@ -339,8 +341,8 @@ export function useGameLoop(phase: PhaseDef, started: boolean, vaccineReady: boo
       setLeucocitos(l => l - def.cost);
       setTowers(t => [...t, {
         id: Math.random().toString(),
-        x: gridX * GAME_MAP.tileSize + GAME_MAP.tileSize / 2,
-        y: gridY * GAME_MAP.tileSize + GAME_MAP.tileSize / 2,
+        x: gridX * gameMap.tileSize + gameMap.tileSize / 2,
+        y: gridY * gameMap.tileSize + gameMap.tileSize / 2,
         def, lastAttack: 0,
         hp: TOWER_MAX_HP, maxHp: TOWER_MAX_HP,
       }]);

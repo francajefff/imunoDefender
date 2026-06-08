@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Switch, Route, useLocation, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PHASES, GAME_MAP, TOWER_DEFS, ENEMY_DEFS, TowerType } from "./lib/constants";
+import { PHASES, PHASE_MAPS, TOWER_DEFS, ENEMY_DEFS, TowerType, getPathTiles, getAdjacentTiles } from "./lib/constants";
 import { useGameLoop } from "./hooks/useGameLoop";
 import { motion, AnimatePresence } from "framer-motion";
 import FaseBonusWhack from "./pages/FaseBonusWhack";
@@ -170,6 +170,11 @@ function GamePhase({ params }: { params: { id: string } }) {
 
   const needsVaccineFirst = !!(phase?.vaccineTarget && phase.id === "2" && !vaccineAssembled);
 
+  // Phase-specific map and derived build zones
+  const gameMap = PHASE_MAPS[params.id] ?? PHASE_MAPS["1"];
+  const pathTiles     = useMemo(() => getPathTiles(gameMap.path), [gameMap]);
+  const adjacentTiles = useMemo(() => getAdjacentTiles(pathTiles, gameMap.width, gameMap.height), [pathTiles, gameMap]);
+
   const game = useGameLoop(phase, !showTutorial, vaccineAssembled);
 
   // Phase 3: influenza vaccine is pre-active (carried over from phase 2's lesson)
@@ -183,10 +188,10 @@ function GamePhase({ params }: { params: { id: string } }) {
   useEffect(() => {
     const el = gameAreaRef.current;
     if (!el) return;
-    const mapW = GAME_MAP.width * GAME_MAP.tileSize;
-    const mapH = GAME_MAP.height * GAME_MAP.tileSize;
+    const mW = gameMap.width * gameMap.tileSize;
+    const mH = gameMap.height * gameMap.tileSize;
     const update = (w: number, h: number) => {
-      setScale(Math.min(w / mapW, h / mapH, 1));
+      setScale(Math.min(w / mW, h / mH, 1));
     };
     const obs = new ResizeObserver(([e]) => {
       const { width, height } = e.contentRect;
@@ -195,23 +200,29 @@ function GamePhase({ params }: { params: { id: string } }) {
     obs.observe(el);
     update(el.clientWidth, el.clientHeight);
     return () => obs.disconnect();
-  }, []);
+  }, [gameMap]);
 
   if (!phase) return <div className="text-white p-8">Fase não encontrada</div>;
 
-  const mapW = GAME_MAP.width * GAME_MAP.tileSize;
-  const mapH = GAME_MAP.height * GAME_MAP.tileSize;
+  const mapW = gameMap.width * gameMap.tileSize;
+  const mapH = gameMap.height * gameMap.tileSize;
 
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectedTower) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    // Divide by scale because getBoundingClientRect returns visual (scaled) coords
-    const x = (e.clientX - rect.left) / scale;
-    const y = (e.clientY - rect.top) / scale;
-    const gx = Math.floor(x / GAME_MAP.tileSize);
-    const gy = Math.floor(y / GAME_MAP.tileSize);
-    if (GAME_MAP.path.some(p => p.x === gx && p.y === gy)) return;
+    const x  = (e.clientX - rect.left) / scale;
+    const y  = (e.clientY - rect.top) / scale;
+    const gx = Math.floor(x / gameMap.tileSize);
+    const gy = Math.floor(y / gameMap.tileSize);
+    // Only allow placement on tiles adjacent to the path (build zone)
+    if (!adjacentTiles.has(`${gx},${gy}`)) return;
     if (phase.hasVIPs && game.citizens.some(c => c.x === gx && c.y === gy)) return;
+    // Block if a tower already occupies this tile
+    if (game.towers.some(t => {
+      const tx = Math.round((t.x - gameMap.tileSize / 2) / gameMap.tileSize);
+      const ty = Math.round((t.y - gameMap.tileSize / 2) / gameMap.tileSize);
+      return tx === gx && ty === gy;
+    })) return;
     game.placeTower(selectedTower, gx, gy);
     setSelectedTower(null);
   };
@@ -379,25 +390,64 @@ function GamePhase({ params }: { params: { id: string } }) {
             }}
             onClick={handleMapClick}
           >
-            {/* Grid tiles */}
-            {Array.from({ length: GAME_MAP.width }).map((_, x) =>
-              Array.from({ length: GAME_MAP.height }).map((_, y) => {
-                const isPath = GAME_MAP.path.some(p => p.x === x && p.y === y);
+            {/* Grid tiles — 3 states: path (red), buildable adjacent (cyan), empty (dark) */}
+            {Array.from({ length: gameMap.width }).map((_, x) =>
+              Array.from({ length: gameMap.height }).map((_, y) => {
+                const key = `${x},${y}`;
+                const isPath     = pathTiles.has(key);
+                const isBuildable = !isPath && adjacentTiles.has(key) && selectedTower !== null;
+                const isOccupied  = !isPath && adjacentTiles.has(key) && game.towers.some(t => {
+                  const tx = Math.round((t.x - gameMap.tileSize / 2) / gameMap.tileSize);
+                  const ty = Math.round((t.y - gameMap.tileSize / 2) / gameMap.tileSize);
+                  return tx === x && ty === y;
+                });
                 return (
                   <div
-                    key={`${x}-${y}`}
-                    className={`absolute border border-white/5 ${isPath ? 'bg-red-900/20' : 'bg-transparent hover:bg-white/5'}`}
-                    style={{ width: GAME_MAP.tileSize, height: GAME_MAP.tileSize, left: x * GAME_MAP.tileSize, top: y * GAME_MAP.tileSize }}
+                    key={key}
+                    className={`absolute transition-colors duration-150 ${
+                      isPath
+                        ? 'border border-red-900/30 bg-red-950/20'
+                        : isBuildable && !isOccupied
+                          ? 'border border-cyan-500/50 bg-cyan-950/30 hover:bg-cyan-900/50 cursor-crosshair'
+                          : adjacentTiles.has(key)
+                            ? 'border border-white/8 bg-white/3'
+                            : 'border border-white/5 bg-transparent'
+                    }`}
+                    style={{ width: gameMap.tileSize, height: gameMap.tileSize, left: x * gameMap.tileSize, top: y * gameMap.tileSize }}
                   />
                 );
               })
             )}
 
-            {/* Path highlight */}
+            {/* Path — filled road visual using expanded tile highlights + SVG road line */}
             <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
+              <defs>
+                <linearGradient id="roadGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="rgba(220,38,38,0.55)" />
+                  <stop offset="100%" stopColor="rgba(239,68,68,0.30)" />
+                </linearGradient>
+              </defs>
               <polyline
-                points={GAME_MAP.path.map(p => `${p.x * GAME_MAP.tileSize + 30},${p.y * GAME_MAP.tileSize + 30}`).join(' ')}
-                fill="none" stroke="rgba(255,50,50,0.3)" strokeWidth="20" strokeLinecap="round" strokeLinejoin="round"
+                points={gameMap.path.map(p =>
+                  `${p.x * gameMap.tileSize + gameMap.tileSize / 2},${p.y * gameMap.tileSize + gameMap.tileSize / 2}`
+                ).join(' ')}
+                fill="none"
+                stroke="url(#roadGrad)"
+                strokeWidth={gameMap.tileSize * 0.72}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.6"
+              />
+              {/* Road edge glow */}
+              <polyline
+                points={gameMap.path.map(p =>
+                  `${p.x * gameMap.tileSize + gameMap.tileSize / 2},${p.y * gameMap.tileSize + gameMap.tileSize / 2}`
+                ).join(' ')}
+                fill="none"
+                stroke="rgba(255,100,100,0.25)"
+                strokeWidth={gameMap.tileSize * 0.72 + 8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
             </svg>
 
@@ -405,8 +455,8 @@ function GamePhase({ params }: { params: { id: string } }) {
             <div
               className="absolute w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center bio-glow"
               style={{
-                left: GAME_MAP.path[GAME_MAP.path.length - 1].x * GAME_MAP.tileSize - 10,
-                top: GAME_MAP.path[GAME_MAP.path.length - 1].y * GAME_MAP.tileSize - 10
+                left: gameMap.path[gameMap.path.length - 1].x * gameMap.tileSize - 10,
+                top:  gameMap.path[gameMap.path.length - 1].y * gameMap.tileSize - 10,
               }}
             >
               <div className="w-10 h-10 bg-primary rounded-full animate-pulse" />
@@ -417,7 +467,7 @@ function GamePhase({ params }: { params: { id: string } }) {
               <div
                 key={c.id}
                 className={`absolute flex flex-col items-center justify-center cursor-pointer transition-all ${c.vaccinated ? 'text-green-400' : 'text-foreground'}`}
-                style={{ width: GAME_MAP.tileSize, height: GAME_MAP.tileSize, left: c.x * GAME_MAP.tileSize, top: c.y * GAME_MAP.tileSize }}
+                style={{ width: gameMap.tileSize, height: gameMap.tileSize, left: c.x * gameMap.tileSize, top: c.y * gameMap.tileSize }}
                 onClick={(e) => {
                   e.stopPropagation();
                   if (!c.vaccinated && game.leucocitos >= 30) {
@@ -437,7 +487,7 @@ function GamePhase({ params }: { params: { id: string } }) {
               <div
                 key={t.id}
                 className="absolute flex flex-col items-center justify-center gap-0.5"
-                style={{ left: t.x - GAME_MAP.tileSize / 2, top: t.y - GAME_MAP.tileSize / 2, width: GAME_MAP.tileSize, height: GAME_MAP.tileSize }}
+                style={{ left: t.x - gameMap.tileSize / 2, top: t.y - gameMap.tileSize / 2, width: gameMap.tileSize, height: gameMap.tileSize }}
               >
                 <div
                   className={`w-8 h-8 rounded-full border-2 bg-black flex items-center justify-center ${t.attackAnim && t.attackAnim > 0 ? 'attack-anim tower-glow' : ''}`}
