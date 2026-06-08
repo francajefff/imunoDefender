@@ -337,6 +337,24 @@ function GamePhase({ params }: { params: { id: string } }) {
             </div>
           )}
 
+          {/* Repair towers button — shown when towers exist and at least one is damaged */}
+          {game.towers.length > 0 && game.towers.some(t => t.hp < t.maxHp) && (
+            <div className="mt-2 border-t border-border pt-3">
+              <div className="text-xs text-red-400 mb-2 flex items-center gap-1">
+                <span>⚠️</span><span>Defesas tomando dano!</span>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full border-green-600/60 text-green-400 hover:bg-green-900/20 text-xs"
+                disabled={game.leucocitos < 100}
+                onClick={() => { game.repairTowers(100); setShowSidebar(false); }}
+              >
+                🔧 Reparar Torres — 100⚪
+              </Button>
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">Como um reforço da vacina!</p>
+            </div>
+          )}
+
           {/* Placement hint */}
           {selectedTower && (
             <div className="mt-auto p-3 rounded-lg border border-cyan-500/30 bg-cyan-950/20 text-xs text-cyan-400">
@@ -418,7 +436,7 @@ function GamePhase({ params }: { params: { id: string } }) {
             {game.towers.map(t => (
               <div
                 key={t.id}
-                className="absolute flex items-center justify-center"
+                className="absolute flex flex-col items-center justify-center gap-0.5"
                 style={{ left: t.x - GAME_MAP.tileSize / 2, top: t.y - GAME_MAP.tileSize / 2, width: GAME_MAP.tileSize, height: GAME_MAP.tileSize }}
               >
                 <div
@@ -426,6 +444,16 @@ function GamePhase({ params }: { params: { id: string } }) {
                   style={{ borderColor: t.def.color }}
                 >
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: t.def.color }} />
+                </div>
+                {/* Tower HP bar */}
+                <div className="w-8 h-1 bg-red-900 rounded overflow-hidden">
+                  <div
+                    className="h-full rounded transition-all duration-200"
+                    style={{
+                      width: `${(t.hp / t.maxHp) * 100}%`,
+                      backgroundColor: t.hp / t.maxHp > 0.5 ? '#22c55e' : t.hp / t.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
+                    }}
+                  />
                 </div>
               </div>
             ))}

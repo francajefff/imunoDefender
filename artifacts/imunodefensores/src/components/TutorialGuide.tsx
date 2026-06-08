@@ -153,6 +153,37 @@ export function TutorialGuide({ phase, onComplete, skippable = false }: Props) {
       ),
     },
     {
+      title: "📱 Onde Ficam as Defesas?",
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl border border-white/10 bg-white/5 text-center">
+              <div className="text-3xl mb-2">🖥️</div>
+              <p className="text-xs text-gray-300 font-bold">Computador</p>
+              <p className="text-xs text-gray-500 mt-1">O painel de defesas fica visível na coluna <strong className="text-white">esquerda</strong> da tela — sempre acessível.</p>
+            </div>
+            <div className="p-3 rounded-xl border border-cyan-500/30 bg-cyan-950/20 text-center">
+              <div className="text-3xl mb-2">📱</div>
+              <p className="text-xs text-cyan-300 font-bold">Celular / Tablet</p>
+              <p className="text-xs text-gray-500 mt-1">O painel fica <strong className="text-white">oculto</strong> para não cobrir o mapa. Toque no ícone para abri-lo!</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 bg-black/40 border border-cyan-500/40 rounded-xl p-4">
+            <div className="w-12 h-12 rounded-lg border-2 border-white/20 bg-white/10 flex items-center justify-center text-2xl flex-shrink-0">
+              ☰
+            </div>
+            <div>
+              <p className="text-cyan-400 font-bold text-sm">Botão ☰ — canto superior direito</p>
+              <p className="text-xs text-gray-400 mt-1">Toque nele para abrir o painel de defesas. Selecione uma defesa e toque em um quadrado livre no mapa.</p>
+            </div>
+          </div>
+          <p className="text-xs text-yellow-300 bg-yellow-950/20 border border-yellow-900/30 rounded-lg p-2">
+            ⚠️ As defesas têm <strong>pontos de vida</strong>! Vírus próximos a elas causam dano. Use o botão <strong>"Reparar Torres"</strong> para restaurá-las.
+          </p>
+        </div>
+      ),
+    },
+    {
       title: "Os Invasores",
       content: (
         <div className="space-y-3">
@@ -226,12 +257,12 @@ export function TutorialGuide({ phase, onComplete, skippable = false }: Props) {
           </p>
           <div className="grid grid-cols-3 gap-3 text-sm mt-4">
             <div className="p-3 rounded-lg bg-blue-950/40 border border-blue-900/50 text-center">
-              <div className="text-blue-400 text-2xl font-bold mb-1">20s</div>
+              <div className="text-blue-400 text-2xl font-bold mb-1">12s</div>
               <div className="text-gray-400 text-xs">Antes da primeira onda — posicione suas defesas!</div>
             </div>
             <div className="p-3 rounded-lg bg-blue-950/40 border border-blue-900/50 text-center">
-              <div className="text-blue-400 text-2xl font-bold mb-1">8s</div>
-              <div className="text-gray-400 text-xs">Entre ondas — reforce suas posições</div>
+              <div className="text-blue-400 text-2xl font-bold mb-1">4s</div>
+              <div className="text-gray-400 text-xs">Entre ondas — a próxima já começa automaticamente!</div>
             </div>
             <div className="p-3 rounded-lg bg-blue-950/40 border border-blue-900/50 text-center">
               <div className="text-cyan-400 text-2xl font-bold mb-1">{phase.waves.length}</div>

@@ -45,6 +45,7 @@ export default function FaseBonusWhack() {
   const [victory, setVictory] = useState(false);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [showNarration, setShowNarration] = useState(true);
+  const [tutorialStep, setTutorialStep] = useState(0);
 
   const gameOverRef = useRef(false);
   const immunityActiveRef = useRef(false);
@@ -467,55 +468,171 @@ export default function FaseBonusWhack() {
       </div>
 
       <AnimatePresence>
-        {showNarration && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: "rgba(0,0,0,0.85)" }}
-          >
-            <div
-              className="p-8 rounded-2xl text-center max-w-lg"
-              style={{
-                background: "#0a0000",
-                border: "2px solid rgba(239,68,68,0.5)",
-                boxShadow: "0 0 40px rgba(239,68,68,0.2)",
-              }}
+        {showNarration && (() => {
+          const steps = [
+            {
+              title: "⚡ Fase Bônus: Ataque Relâmpago!",
+              content: (
+                <div className="space-y-4 text-center">
+                  <div className="text-5xl mb-2">🦠</div>
+                  <p className="text-gray-200 leading-relaxed">
+                    O organismo está sob ataque contínuo! Vírus aparecem e somem rapidamente na corrente sanguínea.
+                    Você tem <strong className="text-red-400">90 segundos</strong> para destruir o máximo possível!
+                  </p>
+                  <div className="bg-red-950/30 border border-red-800/40 rounded-xl p-3 text-sm text-red-300">
+                    ⏱ O tempo restante fica sempre visível no topo da tela — fique de olho!
+                  </div>
+                </div>
+              ),
+            },
+            {
+              title: "🎯 Como Jogar",
+              content: (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 gap-3">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-red-950/30 border border-red-800/40">
+                      <div className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl bg-red-900/40">🦠</div>
+                      <div>
+                        <div className="text-red-400 font-bold text-sm">Vírus Comum — Clique 1×</div>
+                        <div className="text-xs text-gray-400">Rápido e fácil. Vale <span className="text-yellow-400">+10 pts</span></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-orange-950/30 border border-orange-800/40">
+                      <div className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl bg-orange-900/40">🧫</div>
+                      <div>
+                        <div className="text-orange-400 font-bold text-sm">Bactéria — Clique 2×</div>
+                        <div className="text-xs text-gray-400">Mais resistente. Vale <span className="text-yellow-400">+20 pts</span></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-green-950/30 border border-green-800/40">
+                      <div className="w-10 h-10 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl bg-green-900/40">🛡️</div>
+                      <div>
+                        <div className="text-green-400 font-bold text-sm">Célula Aliada — NÃO CLIQUE!</div>
+                        <div className="text-xs text-gray-400">Ajuda o corpo. Atacar tira <span className="text-red-400">-15 pts</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">Se um invasor escapar sem ser clicado, você perde saúde.</p>
+                </div>
+              ),
+            },
+            {
+              title: "💉 Modo Imunidade",
+              content: (
+                <div className="space-y-4 text-center">
+                  <div className="text-4xl mb-2">💉</div>
+                  <p className="text-gray-200 leading-relaxed text-sm">
+                    Cada vírus destruído carrega a <strong className="text-blue-400">Barra de Vacina</strong>.
+                    Quando chegar a 100%, ative o <strong className="text-purple-400">Modo Imunidade</strong>!
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-800/40 text-center">
+                      <div className="text-2xl mb-1">🐢</div>
+                      <div className="text-blue-300 font-bold text-xs">Câmera Lenta</div>
+                      <div className="text-gray-400 text-xs mt-1">Os vírus ficam 80% mais lentos por 10s</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-800/40 text-center">
+                      <div className="text-2xl mb-1">✨</div>
+                      <div className="text-purple-300 font-bold text-xs">Pontos em Dobro</div>
+                      <div className="text-gray-400 text-xs mt-1">Todos os pontos valem 2× durante o modo</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-green-400 bg-green-950/20 border border-green-900/30 rounded-lg p-2">
+                    ✅ Assim funciona a memória imunológica: o corpo responde mais rápido quando já conhece o invasor!
+                  </p>
+                </div>
+              ),
+            },
+          ];
+          const isLast = tutorialStep === steps.length - 1;
+          const current = steps[tutorialStep];
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center"
+              style={{ background: "rgba(0,0,0,0.88)" }}
             >
-              <h2 className="text-3xl font-bold mb-4" style={{ color: "#f87171" }}>
-                Fase Bônus: Ataque Relâmpago!
-              </h2>
-              <p className="mb-4 text-gray-300">
-                O organismo está sob ataque contínuo! Vírus aparecem e desaparecem
-                rapidamente na corrente sanguínea. Clique neles antes que escapem!
-              </p>
-              <p className="mb-4 text-gray-300">
-                Cuidado:{" "}
-                <span style={{ color: "#6ee7b7", fontWeight: "bold" }}>
-                  Células Aliadas (verdes)
-                </span>{" "}
-                ajudam o corpo — atacá-las tira pontos.
-              </p>
-              <p className="mb-6 text-sm" style={{ color: "#93c5fd" }}>
-                Destrua vírus para carregar a vacina. Quando carregada, ative o{" "}
-                <strong>Modo Imunidade</strong>: câmera lenta por 10 segundos e
-                pontos em dobro!
-              </p>
-              <Button
-                onClick={() => setShowNarration(false)}
-                data-testid="button-start-bonus"
-                className="px-8 py-3 text-lg"
+              <div
+                className="w-full max-w-md mx-4 rounded-2xl overflow-hidden"
                 style={{
-                  background: "linear-gradient(135deg, #dc2626, #b91c1c)",
-                  color: "white",
+                  background: "#0a0f1a",
+                  border: "2px solid rgba(239,68,68,0.4)",
+                  boxShadow: "0 0 60px rgba(239,68,68,0.15)",
                 }}
               >
-                Começar!
-              </Button>
-            </div>
-          </motion.div>
-        )}
+                {/* Progress bar */}
+                <div className="h-1 bg-white/10">
+                  <div
+                    className="h-full transition-all duration-300"
+                    style={{
+                      width: `${((tutorialStep + 1) / steps.length) * 100}%`,
+                      background: "linear-gradient(90deg, #dc2626, #f87171)",
+                    }}
+                  />
+                </div>
+
+                <div className="p-6">
+                  {/* Step counter */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">
+                      GUIA {tutorialStep + 1}/{steps.length}
+                    </span>
+                    <span className="text-xs text-red-400 font-bold">Fase Bônus</span>
+                  </div>
+
+                  <h2 className="text-lg font-bold text-white mb-4">{current.title}</h2>
+
+                  <div className="min-h-48">{current.content}</div>
+
+                  {/* Navigation */}
+                  <div className="flex items-center justify-between mt-6">
+                    <button
+                      onClick={() => setTutorialStep(s => Math.max(0, s - 1))}
+                      disabled={tutorialStep === 0}
+                      className="px-4 py-2 text-sm text-gray-400 hover:text-white disabled:opacity-30 transition-colors"
+                    >
+                      ← Anterior
+                    </button>
+                    <div className="flex gap-1.5">
+                      {steps.map((_, i) => (
+                        <div
+                          key={i}
+                          className="w-2 h-2 rounded-full transition-all"
+                          style={{ background: i === tutorialStep ? "#ef4444" : "rgba(255,255,255,0.2)" }}
+                        />
+                      ))}
+                    </div>
+                    {isLast ? (
+                      <button
+                        onClick={() => setShowNarration(false)}
+                        data-testid="button-start-bonus"
+                        className="px-5 py-2 rounded-lg font-bold text-sm text-white transition-all"
+                        style={{
+                          background: "linear-gradient(135deg, #dc2626, #b91c1c)",
+                          boxShadow: "0 0 20px rgba(220,38,38,0.4)",
+                        }}
+                      >
+                        Começar! ⚡
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setTutorialStep(s => s + 1)}
+                        className="px-5 py-2 rounded-lg font-bold text-sm text-white transition-all"
+                        style={{
+                          background: "linear-gradient(135deg, #dc2626, #991b1b)",
+                        }}
+                      >
+                        Próximo →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {gameOver && (
