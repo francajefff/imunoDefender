@@ -4,7 +4,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { PHASES, PHASE_MAPS, TOWER_DEFS, ENEMY_DEFS, TowerType, getPathTiles, getAdjacentTiles } from "./lib/constants";
+import {
+  PHASES,
+  PHASE_MAPS,
+  TOWER_DEFS,
+  ENEMY_DEFS,
+  TowerType,
+  getPathTiles,
+  getAdjacentTiles,
+} from "./lib/constants";
 import { useGameLoop } from "./hooks/useGameLoop";
 import { motion, AnimatePresence } from "framer-motion";
 import FaseBonusWhack from "./pages/FaseBonusWhack";
@@ -28,39 +36,56 @@ function MainMenu() {
           ImunoDefensores
         </h1>
         <p className="text-base sm:text-xl text-foreground/80 mb-6 px-2">
-          Defenda o corpo humano contra invasores. Aprenda como as vacinas salvam vidas!
+          Defenda o corpo humano contra invasores. Aprenda como as vacinas
+          salvam vidas!
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          {Object.values(PHASES).map(p => (
+          {Object.values(PHASES).map((p) => (
             <Card
               key={p.id}
               className="p-4 bg-card/80 border-primary/20 hover:border-primary transition-colors cursor-pointer text-left"
               onClick={() => setLocation(`/fase/${p.id}`)}
               data-testid={`card-fase-${p.id}`}
             >
-              <h3 className="text-base font-bold text-primary">Fase {p.id}: {p.title}</h3>
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.concept}</p>
+              <h3 className="text-base font-bold text-primary">
+                Fase {p.id}: {p.title}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                {p.concept}
+              </p>
             </Card>
           ))}
         </div>
 
         <Card
           className="p-4 mb-5 cursor-pointer transition-all border-2 hover:scale-[1.02]"
-          style={{ background: "rgba(80,0,0,0.4)", borderColor: "rgba(239,68,68,0.5)", boxShadow: "0 0 24px rgba(239,68,68,0.2)" }}
+          style={{
+            background: "rgba(80,0,0,0.4)",
+            borderColor: "rgba(239,68,68,0.5)",
+            boxShadow: "0 0 24px rgba(239,68,68,0.2)",
+          }}
           onClick={() => setLocation("/fase/bonus")}
           data-testid="card-fase-bonus"
         >
           <div className="flex items-center gap-3">
             <div className="text-3xl">⚡</div>
             <div className="text-left">
-              <h3 className="text-base font-bold" style={{ color: "#f87171" }}>Fase Bônus: Ataque Relâmpago</h3>
-              <p className="text-xs text-muted-foreground">Reflexos em ação! Destrua vírus antes que escapem.</p>
+              <h3 className="text-base font-bold" style={{ color: "#f87171" }}>
+                Fase Bônus: Ataque Relâmpago
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Reflexos em ação! Destrua vírus antes que escapem.
+              </p>
             </div>
           </div>
         </Card>
 
-        <Button variant="outline" onClick={() => setLocation("/ranking")} className="text-sm">
+        <Button
+          variant="outline"
+          onClick={() => setLocation("/ranking")}
+          className="text-sm"
+        >
           🏆 Ver Ranking
         </Button>
 
@@ -68,7 +93,7 @@ function MainMenu() {
           <div className="mt-4 text-xs text-gray-500 space-y-1">
             {ranking.map((r, i) => (
               <div key={i} className="flex justify-center gap-3">
-                <span>{["🥇","🥈","🥉"][i]}</span>
+                <span>{["🥇", "🥈", "🥉"][i]}</span>
                 <span className="text-gray-300">{r.name}</span>
                 <span className="text-cyan-500 font-mono">{r.score}</span>
               </div>
@@ -81,7 +106,13 @@ function MainMenu() {
 }
 
 // ─── Vaccine Minigame ─────────────────────────────────────────────────────────
-function VaccineMinigame({ targetType, onComplete }: { targetType: string; onComplete: () => void }) {
+function VaccineMinigame({
+  targetType,
+  onComplete,
+}: {
+  targetType: string;
+  onComplete: () => void;
+}) {
   const [pieces, setPieces] = useState([false, false, false]);
   const labels = ["Proteína Spike", "Fragmento RNA", "Capsídeo"];
 
@@ -89,32 +120,62 @@ function VaccineMinigame({ targetType, onComplete }: { targetType: string; onCom
     const next = [...pieces];
     next[i] = true;
     setPieces(next);
-    if (next.every(x => x)) setTimeout(onComplete, 1200);
+    if (next.every((x) => x)) setTimeout(onComplete, 1200);
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
-      <div className="p-6 sm:p-8 rounded-2xl text-center max-w-md w-full"
-        style={{ background: "#0a0f1a", border: "2px solid rgba(0,200,255,0.4)", boxShadow: "0 0 40px rgba(0,150,255,0.2)" }}>
-        <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2">Montando a Vacina</h2>
+      <div
+        className="p-6 sm:p-8 rounded-2xl text-center max-w-md w-full"
+        style={{
+          background: "#0a0f1a",
+          border: "2px solid rgba(0,200,255,0.4)",
+          boxShadow: "0 0 40px rgba(0,150,255,0.2)",
+        }}
+      >
+        <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2">
+          Montando a Vacina
+        </h2>
         <p className="text-sm text-gray-400 mb-2">
-          Clique nos 3 fragmentos do <strong className="text-white">{targetType.toUpperCase()}</strong> para montar a vacina.
+          Clique nos 3 fragmentos do{" "}
+          <strong className="text-white">{targetType.toUpperCase()}</strong>{" "}
+          para montar a vacina.
         </p>
-        <p className="text-xs text-cyan-500 mb-6">Na vida real, vacinas funcionam exatamente assim — partes inativas do patógeno.</p>
+        <p className="text-xs text-cyan-500 mb-6">
+          Na vida real, vacinas funcionam exatamente assim — partes inativas do
+          patógeno.
+        </p>
         <div className="flex gap-4 justify-center mb-8">
-          {[0, 1, 2].map(i => (
-            <div key={i} onClick={() => !pieces[i] && clickPiece(i)} className="flex flex-col items-center gap-2 cursor-pointer">
-              <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
-                pieces[i] ? "bg-primary border-primary scale-110 shadow-lg" : "bg-muted border-muted-foreground/30 hover:border-primary/50 hover:scale-105"
-              }`} style={pieces[i] ? { boxShadow: "0 0 20px rgba(0,200,255,0.5)" } : {}}>
-                {pieces[i] ? <span className="text-white text-xl font-bold">✓</span> : <span className="text-2xl">🧬</span>}
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              onClick={() => !pieces[i] && clickPiece(i)}
+              className="flex flex-col items-center gap-2 cursor-pointer"
+            >
+              <div
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+                  pieces[i]
+                    ? "bg-primary border-primary scale-110 shadow-lg"
+                    : "bg-muted border-muted-foreground/30 hover:border-primary/50 hover:scale-105"
+                }`}
+                style={
+                  pieces[i] ? { boxShadow: "0 0 20px rgba(0,200,255,0.5)" } : {}
+                }
+              >
+                {pieces[i] ? (
+                  <span className="text-white text-xl font-bold">✓</span>
+                ) : (
+                  <span className="text-2xl">🧬</span>
+                )}
               </div>
               <span className="text-xs text-gray-500">{labels[i]}</span>
             </div>
           ))}
         </div>
-        {pieces.every(x => x) && (
-          <div className="text-green-400 font-bold animate-pulse">Vacina Concluída! Memória Imunológica Ativada!</div>
+        {pieces.every((x) => x) && (
+          <div className="text-green-400 font-bold animate-pulse">
+            Vacina Concluída! Memória Imunológica Ativada!
+          </div>
         )}
       </div>
     </div>
@@ -122,8 +183,18 @@ function VaccineMinigame({ targetType, onComplete }: { targetType: string; onCom
 }
 
 // ─── Prep Countdown ───────────────────────────────────────────────────────────
-function PrepCountdown({ timeLeft, waveNumber, total, needsVaccine, onOpenVaccine }: {
-  timeLeft: number; waveNumber: number; total: number; needsVaccine: boolean; onOpenVaccine: () => void;
+function PrepCountdown({
+  timeLeft,
+  waveNumber,
+  total,
+  needsVaccine,
+  onOpenVaccine,
+}: {
+  timeLeft: number;
+  waveNumber: number;
+  total: number;
+  needsVaccine: boolean;
+  onOpenVaccine: () => void;
 }) {
   const seconds = Math.ceil(timeLeft / 1000);
   const isFirst = waveNumber === 1;
@@ -132,8 +203,14 @@ function PrepCountdown({ timeLeft, waveNumber, total, needsVaccine, onOpenVaccin
   if (needsVaccine) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <p className="text-yellow-400 font-bold text-sm animate-pulse text-center">Desenvolva a vacina antes da primeira onda!</p>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/80 bio-glow" onClick={onOpenVaccine} data-testid="button-open-vaccine">
+        <p className="text-yellow-400 font-bold text-sm animate-pulse text-center">
+          Desenvolva a vacina antes da primeira onda!
+        </p>
+        <Button
+          className="bg-primary text-primary-foreground hover:bg-primary/80 bio-glow"
+          onClick={onOpenVaccine}
+          data-testid="button-open-vaccine"
+        >
           💉 Montar Vacina
         </Button>
       </div>
@@ -142,14 +219,26 @@ function PrepCountdown({ timeLeft, waveNumber, total, needsVaccine, onOpenVaccin
 
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-xs px-4">
-      <p className="text-primary font-bold text-sm">{isFirst ? "Posicione suas defesas!" : `Próxima onda em...`}</p>
+      <p className="text-primary font-bold text-sm">
+        {isFirst ? "Posicione suas defesas!" : `Próxima onda em...`}
+      </p>
       <div className="flex items-center gap-3 w-full">
         <div className="flex-1 h-2 bg-white/10 rounded overflow-hidden">
-          <div className="h-full transition-none rounded" style={{ width: `${progress * 100}%`, background: "linear-gradient(90deg, #06b6d4, #3b82f6)" }} />
+          <div
+            className="h-full transition-none rounded"
+            style={{
+              width: `${progress * 100}%`,
+              background: "linear-gradient(90deg, #06b6d4, #3b82f6)",
+            }}
+          />
         </div>
-        <span className="text-xl font-bold font-mono text-cyan-400 w-8 text-right">{seconds}</span>
+        <span className="text-xl font-bold font-mono text-cyan-400 w-8 text-right">
+          {seconds}
+        </span>
       </div>
-      <p className="text-xs text-gray-500">Onda {waveNumber} de {total}</p>
+      <p className="text-xs text-gray-500">
+        Onda {waveNumber} de {total}
+      </p>
     </div>
   );
 }
@@ -168,19 +257,26 @@ function GamePhase({ params }: { params: { id: string } }) {
   // Phase 3 auto-activates influenza vaccine — no mandatory assembly needed before wave 1
   const [vaccineAssembled, setVaccineAssembled] = useState(phase?.id === "3");
 
-  const needsVaccineFirst = !!(phase?.vaccineTarget && phase.id === "2" && !vaccineAssembled);
+  const needsVaccineFirst = !!(
+    phase?.vaccineTarget &&
+    phase.id === "2" &&
+    !vaccineAssembled
+  );
 
   // Phase-specific map and derived build zones
   const gameMap = PHASE_MAPS[params.id] ?? PHASE_MAPS["1"];
-  const pathTiles     = useMemo(() => getPathTiles(gameMap.path), [gameMap]);
-  const adjacentTiles = useMemo(() => getAdjacentTiles(pathTiles, gameMap.width, gameMap.height), [pathTiles, gameMap]);
+  const pathTiles = useMemo(() => getPathTiles(gameMap.path), [gameMap]);
+  const adjacentTiles = useMemo(
+    () => getAdjacentTiles(pathTiles, gameMap.width, gameMap.height),
+    [pathTiles, gameMap],
+  );
 
   const game = useGameLoop(phase, !showTutorial, vaccineAssembled);
 
   // Phase 3: influenza vaccine is pre-active (carried over from phase 2's lesson)
   useEffect(() => {
     if (phase?.id === "3" && !game.vaccinesActive.includes("influenza")) {
-      game.setVaccinesActive(v => [...v, "influenza"]);
+      game.setVaccinesActive((v) => [...v, "influenza"]);
     }
   }, [phase?.id]);
 
@@ -210,25 +306,33 @@ function GamePhase({ params }: { params: { id: string } }) {
   const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!selectedTower) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x  = (e.clientX - rect.left) / scale;
-    const y  = (e.clientY - rect.top) / scale;
+    const x = (e.clientX - rect.left) / scale;
+    const y = (e.clientY - rect.top) / scale;
     const gx = Math.floor(x / gameMap.tileSize);
     const gy = Math.floor(y / gameMap.tileSize);
-    // Only allow placement on tiles adjacent to the path (build zone)
-    if (!adjacentTiles.has(`${gx},${gy}`)) return;
-    if (phase.hasVIPs && game.citizens.some(c => c.x === gx && c.y === gy)) return;
-    // Block if a tower already occupies this tile
-    if (game.towers.some(t => {
-      const tx = Math.round((t.x - gameMap.tileSize / 2) / gameMap.tileSize);
-      const ty = Math.round((t.y - gameMap.tileSize / 2) / gameMap.tileSize);
-      return tx === gx && ty === gy;
-    })) return;
+
+    // CORREÇÃO: Permite posicionar APENAS nos quadrados que fazem parte do caminho (rota do vírus)
+    if (!pathTiles.has(`${gx},${gy}`)) return;
+
+    if (phase.hasVIPs && game.citizens.some((c) => c.x === gx && c.y === gy))
+      return;
+
+    // Bloqueia se já existir uma torre ocupando exatamente esse mesmo quadrado do caminho
+    if (
+      game.towers.some((t) => {
+        const tx = Math.round((t.x - gameMap.tileSize / 2) / gameMap.tileSize);
+        const ty = Math.round((t.y - gameMap.tileSize / 2) / gameMap.tileSize);
+        return tx === gx && ty === gy;
+      })
+    )
+      return;
+
     game.placeTower(selectedTower, gx, gy);
     setSelectedTower(null);
   };
 
   const handleVaccineComplete = () => {
-    game.setVaccinesActive(prev => [...prev, phase.vaccineTarget!]);
+    game.setVaccinesActive((prev) => [...prev, phase.vaccineTarget!]);
     setVaccineAssembled(true);
     setShowMinigame(false);
   };
@@ -240,13 +344,26 @@ function GamePhase({ params }: { params: { id: string } }) {
       {/* ── Top HUD ── */}
       <div className="h-12 sm:h-14 border-b border-border bg-card/50 flex items-center justify-between px-3 sm:px-6 gap-2 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="sm" onClick={() => setLocation('/')} data-testid="button-exit" className="shrink-0 text-xs sm:text-sm px-2">← Sair</Button>
-          <h2 className="hidden sm:block text-base font-bold text-primary truncate">{phase.title}</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/")}
+            data-testid="button-exit"
+            className="shrink-0 text-xs sm:text-sm px-2"
+          >
+            ← Sair
+          </Button>
+          <h2 className="hidden sm:block text-base font-bold text-primary truncate">
+            {phase.title}
+          </h2>
         </div>
         <div className="flex items-center gap-2 sm:gap-6 font-mono shrink-0">
           <div className="flex items-center gap-1.5">
             <div className="w-16 sm:w-24 h-2.5 bg-red-950 rounded overflow-hidden border border-red-900/50">
-              <div className="h-full bg-green-500 transition-all duration-300" style={{ width: `${game.hp}%` }} />
+              <div
+                className="h-full bg-green-500 transition-all duration-300"
+                style={{ width: `${game.hp}%` }}
+              />
             </div>
             <span className="text-green-400 text-xs">{game.hp}%</span>
           </div>
@@ -257,7 +374,7 @@ function GamePhase({ params }: { params: { id: string } }) {
           {/* Mobile sidebar toggle */}
           <button
             className="sm:hidden p-1.5 rounded-lg border border-white/10 text-gray-300 hover:text-white active:scale-95 transition-all"
-            onClick={() => setShowSidebar(s => !s)}
+            onClick={() => setShowSidebar((s) => !s)}
             aria-label="Abrir defesas"
           >
             ☰
@@ -271,7 +388,9 @@ function GamePhase({ params }: { params: { id: string } }) {
         <AnimatePresence>
           {showSidebar && (
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="fixed inset-0 z-30 sm:hidden bg-black/60"
               onClick={() => setShowSidebar(false)}
             />
@@ -279,97 +398,144 @@ function GamePhase({ params }: { params: { id: string } }) {
         </AnimatePresence>
 
         {/* Sidebar panel */}
-        <div className={`
+        <div
+          className={`
           sm:relative sm:translate-x-0 sm:w-56 lg:w-64
           fixed left-0 top-0 bottom-0 z-40 w-64
           border-r border-border bg-card/95 p-3 overflow-y-auto flex flex-col gap-2
           transition-transform duration-200 ease-in-out
           ${showSidebar ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}
-        `}>
+        `}
+        >
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider">Defesas</h3>
-            <button className="sm:hidden text-gray-400 hover:text-white text-lg leading-none" onClick={() => setShowSidebar(false)}>✕</button>
+            <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider">
+              Defesas
+            </h3>
+            <button
+              className="sm:hidden text-gray-400 hover:text-white text-lg leading-none"
+              onClick={() => setShowSidebar(false)}
+            >
+              ✕
+            </button>
           </div>
 
           {/* Tower cards */}
-          {phase.allowedTowers.map(t => {
+          {phase.allowedTowers.map((t) => {
             const def = TOWER_DEFS[t];
             const canAfford = game.leucocitos >= def.cost;
             return (
               <div
                 key={t}
-                onClick={() => { if (canAfford) { setSelectedTower(t); setShowSidebar(false); } }}
+                onClick={() => {
+                  if (canAfford) {
+                    setSelectedTower(t);
+                    setShowSidebar(false);
+                  }
+                }}
                 data-testid={`tower-${t}`}
                 className={`p-3 rounded-lg border-2 transition-all
-                  ${selectedTower === t ? 'border-primary bg-primary/20' : 'border-border bg-card'}
-                  ${!canAfford ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}`}
+                  ${selectedTower === t ? "border-primary bg-primary/20" : "border-border bg-card"}
+                  ${!canAfford ? "opacity-40 cursor-not-allowed" : "cursor-pointer hover:border-primary/50"}`}
               >
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full border" style={{ borderColor: def.color, backgroundColor: `${def.color}30` }} />
-                    <span className="font-bold text-xs" style={{ color: def.color }}>{def.name}</span>
+                    <div
+                      className="w-3 h-3 rounded-full border"
+                      style={{
+                        borderColor: def.color,
+                        backgroundColor: `${def.color}30`,
+                      }}
+                    />
+                    <span
+                      className="font-bold text-xs"
+                      style={{ color: def.color }}
+                    >
+                      {def.name}
+                    </span>
                   </div>
                   <span className="text-yellow-400 text-xs">{def.cost}⚪</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{def.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {def.description}
+                </p>
               </div>
             );
           })}
 
           {/* Vaccine button */}
-          {phase.vaccineTarget && !game.vaccinesActive.includes(phase.vaccineTarget) && (
-            <div className="mt-2 flex flex-col gap-2">
-              {phase.vaccineHint && (
-                <div className="text-xs p-2 rounded-lg border border-yellow-900/40 bg-yellow-950/20 text-yellow-300">
-                  💡 {phase.vaccineHint}
-                </div>
-              )}
-              <Button
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/80 bio-glow text-xs"
-                onClick={() => { setShowMinigame(true); setShowSidebar(false); }}
-                data-testid="button-vaccine"
-              >
-                💉 Desenvolver Vacina
-              </Button>
-            </div>
-          )}
+          {phase.vaccineTarget &&
+            !game.vaccinesActive.includes(phase.vaccineTarget) && (
+              <div className="mt-2 flex flex-col gap-2">
+                {phase.vaccineHint && (
+                  <div className="text-xs p-2 rounded-lg border border-yellow-900/40 bg-yellow-950/20 text-yellow-300">
+                    💡 {phase.vaccineHint}
+                  </div>
+                )}
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/80 bio-glow text-xs"
+                  onClick={() => {
+                    setShowMinigame(true);
+                    setShowSidebar(false);
+                  }}
+                  data-testid="button-vaccine"
+                >
+                  💉 Desenvolver Vacina
+                </Button>
+              </div>
+            )}
 
           {/* Active vaccines */}
           {game.vaccinesActive.length > 0 && (
             <div className="mt-2 border-t border-border pt-3">
-              <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-2">Vacinas Ativas</h3>
-              {game.vaccinesActive.map(v => (
-                <div key={v} className="text-green-400 text-xs flex items-center gap-2 py-1">
+              <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-2">
+                Vacinas Ativas
+              </h3>
+              {game.vaccinesActive.map((v) => (
+                <div
+                  key={v}
+                  className="text-green-400 text-xs flex items-center gap-2 py-1"
+                >
                   <span className="text-green-500">✓</span>
-                  <span className="truncate">{ENEMY_DEFS[v as keyof typeof ENEMY_DEFS]?.name ?? v} — 3× memória</span>
+                  <span className="truncate">
+                    {ENEMY_DEFS[v as keyof typeof ENEMY_DEFS]?.name ?? v} — 3×
+                    memória
+                  </span>
                 </div>
               ))}
             </div>
           )}
 
           {/* Repair towers button — shown when towers exist and at least one is damaged */}
-          {game.towers.length > 0 && game.towers.some(t => t.hp < t.maxHp) && (
-            <div className="mt-2 border-t border-border pt-3">
-              <div className="text-xs text-red-400 mb-2 flex items-center gap-1">
-                <span>⚠️</span><span>Defesas tomando dano!</span>
+          {game.towers.length > 0 &&
+            game.towers.some((t) => t.hp < t.maxHp) && (
+              <div className="mt-2 border-t border-border pt-3">
+                <div className="text-xs text-red-400 mb-2 flex items-center gap-1">
+                  <span>⚠️</span>
+                  <span>Defesas tomando dano!</span>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full border-green-600/60 text-green-400 hover:bg-green-900/20 text-xs"
+                  disabled={game.leucocitos < 100}
+                  onClick={() => {
+                    game.repairTowers(100);
+                    setShowSidebar(false);
+                  }}
+                >
+                  🔧 Reparar Torres — 100⚪
+                </Button>
+                <p className="text-[10px] text-muted-foreground mt-1 text-center">
+                  Como um reforço da vacina!
+                </p>
               </div>
-              <Button
-                variant="outline"
-                className="w-full border-green-600/60 text-green-400 hover:bg-green-900/20 text-xs"
-                disabled={game.leucocitos < 100}
-                onClick={() => { game.repairTowers(100); setShowSidebar(false); }}
-              >
-                🔧 Reparar Torres — 100⚪
-              </Button>
-              <p className="text-[10px] text-muted-foreground mt-1 text-center">Como um reforço da vacina!</p>
-            </div>
-          )}
+            )}
 
           {/* Placement hint */}
           {selectedTower && (
             <div className="mt-auto p-3 rounded-lg border border-cyan-500/30 bg-cyan-950/20 text-xs text-cyan-400">
-              Clique em um quadrado livre no mapa para construir o <strong>{TOWER_DEFS[selectedTower].name}</strong>
+              Clique em um quadrado livre no mapa para construir o{" "}
+              <strong>{TOWER_DEFS[selectedTower].name}</strong>
             </div>
           )}
         </div>
@@ -390,37 +556,51 @@ function GamePhase({ params }: { params: { id: string } }) {
             }}
             onClick={handleMapClick}
           >
-            {/* Grid tiles — 3 states: path (red), buildable adjacent (cyan), empty (dark) */}
+            {/* Grid tiles — Atualizado: Acende apenas o caminho vermelho quando uma defesa for selecionada */}
             {Array.from({ length: gameMap.width }).map((_, x) =>
               Array.from({ length: gameMap.height }).map((_, y) => {
                 const key = `${x},${y}`;
-                const isPath     = pathTiles.has(key);
-                const isBuildable = !isPath && adjacentTiles.has(key) && selectedTower !== null;
-                const isOccupied  = !isPath && adjacentTiles.has(key) && game.towers.some(t => {
-                  const tx = Math.round((t.x - gameMap.tileSize / 2) / gameMap.tileSize);
-                  const ty = Math.round((t.y - gameMap.tileSize / 2) / gameMap.tileSize);
-                  return tx === x && ty === y;
-                });
+                const isPath = pathTiles.has(key);
+                const isBuildable = isPath && selectedTower !== null;
+                const isOccupied =
+                  isPath &&
+                  game.towers.some((t) => {
+                    const tx = Math.round(
+                      (t.x - gameMap.tileSize / 2) / gameMap.tileSize,
+                    );
+                    const ty = Math.round(
+                      (t.y - gameMap.tileSize / 2) / gameMap.tileSize,
+                    );
+                    return tx === x && ty === y;
+                  });
+
                 return (
                   <div
                     key={key}
                     className={`absolute transition-colors duration-150 ${
                       isPath
-                        ? 'border border-red-900/30 bg-red-950/20'
-                        : isBuildable && !isOccupied
-                          ? 'border border-cyan-500/50 bg-cyan-950/30 hover:bg-cyan-900/50 cursor-crosshair'
-                          : adjacentTiles.has(key)
-                            ? 'border border-white/8 bg-white/3'
-                            : 'border border-white/5 bg-transparent'
+                        ? isBuildable && !isOccupied
+                          ? "border-2 border-cyan-400 bg-red-950/40 cursor-crosshair bio-glow" // Destaca o caminho em ciano indicando onde colocar
+                          : "border border-red-900/20 bg-red-950/10" // Caminho normal em repouso
+                        : "border border-white/5 bg-transparent" // Fora do caminho fica totalmente limpo e escuro
                     }`}
-                    style={{ width: gameMap.tileSize, height: gameMap.tileSize, left: x * gameMap.tileSize, top: y * gameMap.tileSize }}
+                    style={{
+                      width: gameMap.tileSize,
+                      height: gameMap.tileSize,
+                      left: x * gameMap.tileSize,
+                      top: y * gameMap.tileSize,
+                    }}
                   />
                 );
-              })
+              }),
             )}
 
             {/* Path — filled road visual using expanded tile highlights + SVG road line */}
-            <svg className="absolute inset-0 pointer-events-none" width="100%" height="100%">
+            <svg
+              className="absolute inset-0 pointer-events-none"
+              width="100%"
+              height="100%"
+            >
               <defs>
                 <linearGradient id="roadGrad" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor="rgba(220,38,38,0.55)" />
@@ -428,9 +608,12 @@ function GamePhase({ params }: { params: { id: string } }) {
                 </linearGradient>
               </defs>
               <polyline
-                points={gameMap.path.map(p =>
-                  `${p.x * gameMap.tileSize + gameMap.tileSize / 2},${p.y * gameMap.tileSize + gameMap.tileSize / 2}`
-                ).join(' ')}
+                points={gameMap.path
+                  .map(
+                    (p) =>
+                      `${p.x * gameMap.tileSize + gameMap.tileSize / 2},${p.y * gameMap.tileSize + gameMap.tileSize / 2}`,
+                  )
+                  .join(" ")}
                 fill="none"
                 stroke="url(#roadGrad)"
                 strokeWidth={gameMap.tileSize * 0.72}
@@ -440,9 +623,12 @@ function GamePhase({ params }: { params: { id: string } }) {
               />
               {/* Road edge glow */}
               <polyline
-                points={gameMap.path.map(p =>
-                  `${p.x * gameMap.tileSize + gameMap.tileSize / 2},${p.y * gameMap.tileSize + gameMap.tileSize / 2}`
-                ).join(' ')}
+                points={gameMap.path
+                  .map(
+                    (p) =>
+                      `${p.x * gameMap.tileSize + gameMap.tileSize / 2},${p.y * gameMap.tileSize + gameMap.tileSize / 2}`,
+                  )
+                  .join(" ")}
                 fill="none"
                 stroke="rgba(255,100,100,0.25)"
                 strokeWidth={gameMap.tileSize * 0.72 + 8}
@@ -455,45 +641,77 @@ function GamePhase({ params }: { params: { id: string } }) {
             <div
               className="absolute w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center bio-glow"
               style={{
-                left: gameMap.path[gameMap.path.length - 1].x * gameMap.tileSize - 10,
-                top:  gameMap.path[gameMap.path.length - 1].y * gameMap.tileSize - 10,
+                left:
+                  gameMap.path[gameMap.path.length - 1].x * gameMap.tileSize -
+                  10,
+                top:
+                  gameMap.path[gameMap.path.length - 1].y * gameMap.tileSize -
+                  10,
               }}
             >
               <div className="w-10 h-10 bg-primary rounded-full animate-pulse" />
             </div>
 
             {/* Citizens (Phase 4) */}
-            {phase.hasVIPs && game.citizens.map(c => (
-              <div
-                key={c.id}
-                className={`absolute flex flex-col items-center justify-center cursor-pointer transition-all ${c.vaccinated ? 'text-green-400' : 'text-foreground'}`}
-                style={{ width: gameMap.tileSize, height: gameMap.tileSize, left: c.x * gameMap.tileSize, top: c.y * gameMap.tileSize }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!c.vaccinated && game.leucocitos >= 30) {
-                    game.setLeucocitos(l => l - 30);
-                    game.setCitizens(cs => cs.map(cc => cc.id === c.id ? { ...cc, vaccinated: true } : cc));
-                  }
-                }}
-              >
-                <div className={`text-2xl ${c.vaccinated ? 'bio-glow rounded-full' : ''}`}>👤</div>
-                {!c.vaccinated && <div className="text-[10px] bg-black/80 px-1 rounded">-30⚪</div>}
-                {c.vaccinated && <div className="absolute w-32 h-32 border-2 border-green-500/30 rounded-full animate-spin-slow pointer-events-none" />}
-              </div>
-            ))}
+            {phase.hasVIPs &&
+              game.citizens.map((c) => (
+                <div
+                  key={c.id}
+                  className={`absolute flex flex-col items-center justify-center cursor-pointer transition-all ${c.vaccinated ? "text-green-400" : "text-foreground"}`}
+                  style={{
+                    width: gameMap.tileSize,
+                    height: gameMap.tileSize,
+                    left: c.x * gameMap.tileSize,
+                    top: c.y * gameMap.tileSize,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!c.vaccinated && game.leucocitos >= 30) {
+                      game.setLeucocitos((l) => l - 30);
+                      game.setCitizens((cs) =>
+                        cs.map((cc) =>
+                          cc.id === c.id ? { ...cc, vaccinated: true } : cc,
+                        ),
+                      );
+                    }
+                  }}
+                >
+                  <div
+                    className={`text-2xl ${c.vaccinated ? "bio-glow rounded-full" : ""}`}
+                  >
+                    👤
+                  </div>
+                  {!c.vaccinated && (
+                    <div className="text-[10px] bg-black/80 px-1 rounded">
+                      -30⚪
+                    </div>
+                  )}
+                  {c.vaccinated && (
+                    <div className="absolute w-32 h-32 border-2 border-green-500/30 rounded-full animate-spin-slow pointer-events-none" />
+                  )}
+                </div>
+              ))}
 
             {/* Towers */}
-            {game.towers.map(t => (
+            {game.towers.map((t) => (
               <div
                 key={t.id}
                 className="absolute flex flex-col items-center justify-center gap-0.5"
-                style={{ left: t.x - gameMap.tileSize / 2, top: t.y - gameMap.tileSize / 2, width: gameMap.tileSize, height: gameMap.tileSize }}
+                style={{
+                  left: t.x - gameMap.tileSize / 2,
+                  top: t.y - gameMap.tileSize / 2,
+                  width: gameMap.tileSize,
+                  height: gameMap.tileSize,
+                }}
               >
                 <div
-                  className={`w-8 h-8 rounded-full border-2 bg-black flex items-center justify-center ${t.attackAnim && t.attackAnim > 0 ? 'attack-anim tower-glow' : ''}`}
+                  className={`w-8 h-8 rounded-full border-2 bg-black flex items-center justify-center ${t.attackAnim && t.attackAnim > 0 ? "attack-anim tower-glow" : ""}`}
                   style={{ borderColor: t.def.color }}
                 >
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: t.def.color }} />
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: t.def.color }}
+                  />
                 </div>
                 {/* Tower HP bar */}
                 <div className="w-8 h-1 bg-red-900 rounded overflow-hidden">
@@ -501,7 +719,12 @@ function GamePhase({ params }: { params: { id: string } }) {
                     className="h-full rounded transition-all duration-200"
                     style={{
                       width: `${(t.hp / t.maxHp) * 100}%`,
-                      backgroundColor: t.hp / t.maxHp > 0.5 ? '#22c55e' : t.hp / t.maxHp > 0.25 ? '#f59e0b' : '#ef4444',
+                      backgroundColor:
+                        t.hp / t.maxHp > 0.5
+                          ? "#22c55e"
+                          : t.hp / t.maxHp > 0.25
+                            ? "#f59e0b"
+                            : "#ef4444",
                     }}
                   />
                 </div>
@@ -509,27 +732,46 @@ function GamePhase({ params }: { params: { id: string } }) {
             ))}
 
             {/* Enemies */}
-            {game.enemies.map(e => (
+            {game.enemies.map((e) => (
               <div
                 key={e.id}
                 className="absolute flex flex-col items-center justify-center pointer-events-none"
                 style={{ left: e.x - 15, top: e.y - 15, width: 30, height: 30 }}
               >
-                <div className={`w-6 h-6 rounded-full bg-black border-[3px] ${e.def.glowClass}`} style={{ borderColor: e.def.color }} />
+                <div
+                  className={`w-6 h-6 rounded-full bg-black border-[3px] ${e.def.glowClass}`}
+                  style={{ borderColor: e.def.color }}
+                />
                 <div className="absolute -top-3 w-8 h-1 bg-red-900 rounded overflow-hidden">
-                  <div className="h-full bg-green-500 transition-all duration-75" style={{ width: `${(e.hp / e.maxHp) * 100}%` }} />
+                  <div
+                    className="h-full bg-green-500 transition-all duration-75"
+                    style={{ width: `${(e.hp / e.maxHp) * 100}%` }}
+                  />
                 </div>
               </div>
             ))}
 
             {/* Projectiles */}
-            {game.projectiles.map(p => (
-              <div key={p.id} className="absolute w-2 h-2 rounded-full bg-white projectile-glow" style={{ left: p.x - 1, top: p.y - 1 }} />
+            {game.projectiles.map((p) => (
+              <div
+                key={p.id}
+                className="absolute w-2 h-2 rounded-full bg-white projectile-glow"
+                style={{ left: p.x - 1, top: p.y - 1 }}
+              />
             ))}
 
             {/* Particles */}
-            {game.particles.map(p => (
-              <div key={p.id} className="absolute w-1 h-1 rounded-full" style={{ left: p.x, top: p.y, backgroundColor: p.color, opacity: p.life / 500 }} />
+            {game.particles.map((p) => (
+              <div
+                key={p.id}
+                className="absolute w-1 h-1 rounded-full"
+                style={{
+                  left: p.x,
+                  top: p.y,
+                  backgroundColor: p.color,
+                  opacity: p.life / 500,
+                }}
+              />
             ))}
           </div>
         </div>
@@ -545,25 +787,35 @@ function GamePhase({ params }: { params: { id: string } }) {
             </span>
           </div>
         )}
-        {!game.waveRunning && game.isPrepPhase && !game.victory && !game.gameOver && (
-          <PrepCountdown
-            timeLeft={game.prepTimeLeft}
-            waveNumber={game.waveIndex + 2}
-            total={phase.waves.length}
-            needsVaccine={needsVaccineFirst}
-            onOpenVaccine={() => setShowMinigame(true)}
-          />
-        )}
+        {!game.waveRunning &&
+          game.isPrepPhase &&
+          !game.victory &&
+          !game.gameOver && (
+            <PrepCountdown
+              timeLeft={game.prepTimeLeft}
+              waveNumber={game.waveIndex + 2}
+              total={phase.waves.length}
+              needsVaccine={needsVaccineFirst}
+              onOpenVaccine={() => setShowMinigame(true)}
+            />
+          )}
       </div>
 
       {/* ── Tutorial ── */}
       {showTutorial && (
-        <TutorialGuide phase={phase} onComplete={() => setShowTutorial(false)} skippable={phase.id !== "1"} />
+        <TutorialGuide
+          phase={phase}
+          onComplete={() => setShowTutorial(false)}
+          skippable={phase.id !== "1"}
+        />
       )}
 
       {/* ── Vaccine Minigame ── */}
       {showMinigame && (
-        <VaccineMinigame targetType={phase.vaccineTarget!} onComplete={handleVaccineComplete} />
+        <VaccineMinigame
+          targetType={phase.vaccineTarget!}
+          onComplete={handleVaccineComplete}
+        />
       )}
 
       {/* ── Game Over ── */}
@@ -587,7 +839,11 @@ function GamePhase({ params }: { params: { id: string } }) {
           phaseId={phase.id}
           phaseTitle={phase.title}
           onMenu={() => setLocation("/")}
-          onNextPhase={!isLastPhase ? () => setLocation(`/fase/${parseInt(phase.id) + 1}`) : undefined}
+          onNextPhase={
+            !isLastPhase
+              ? () => setLocation(`/fase/${parseInt(phase.id) + 1}`)
+              : undefined
+          }
         />
       )}
     </div>
@@ -602,7 +858,9 @@ function Router() {
       <Route path="/ranking" component={RankingPage} />
       <Route path="/fase/bonus" component={FaseBonusWhack} />
       <Route path="/fase/:id">
-        {(params) => params ? <GamePhase key={params.id} params={params} /> : null}
+        {(params) =>
+          params ? <GamePhase key={params.id} params={params} /> : null
+        }
       </Route>
       <Route>404 Não Encontrado</Route>
     </Switch>
