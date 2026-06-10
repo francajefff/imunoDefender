@@ -249,8 +249,8 @@ export function useGameLoop(
 
           // 1. Checa colisão com qualquer célula de defesa (torre) no mesmo quadrado
           const blockingTower = towersRef.current.find((t) => {
-            const tdx = e.x - t.x; // Proximidade direta no grid
-            const tdy = e.y - t.y;
+            const tdx = enemy.x - t.x;
+            const tdy = enemy.y - t.y;
             return Math.sqrt(tdx * tdx + tdy * tdy) < 32;
           });
 
