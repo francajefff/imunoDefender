@@ -22,7 +22,8 @@ export interface Enemy extends Entity {
   maxHp: number;
   pathIndex: number;
   distanceToNext: number;
-  isBlocked?: boolean; // Novo: indica se o vírus está empacado
+  isBlocked?: boolean;
+  mutationPower?: number;
 }
 
 export interface Tower extends Entity {
@@ -31,6 +32,7 @@ export interface Tower extends Entity {
   attackAnim?: number;
   hp: number;
   maxHp: number;
+  armor?: number;
 }
 
 export interface Projectile extends Entity {
@@ -49,7 +51,7 @@ export interface Particle extends Entity {
 
 const FIRST_WAVE_PREP = 12000;
 const BETWEEN_WAVE_PREP = 4000;
-const ENEMY_TOWER_DAMAGE = 25; // Ajustado para um combate corpo a corpo mais frenético
+const ENEMY_TOWER_DAMAGE = 18;
 
 export function useGameLoop(
   phase: PhaseDef,
@@ -95,7 +97,7 @@ export function useGameLoop(
   const isPrepPhaseRef = useRef(true);
   const vaccineReadyRef = useRef(vaccineReady);
   const lastWaveDoneRef = useRef(false);
-  const towersRef = useRef<Tower[]>([]); // Ref para evitar dessincronização de colisões de torres
+  const towersRef = useRef<Tower[]>([]);
 
   useEffect(() => {
     vaccinesActiveRef.current = vaccinesActive;
@@ -198,6 +200,7 @@ export function useGameLoop(
             pathIndex: 0,
             distanceToNext: 0,
             isBlocked: false,
+            mutationPower: 1,
           });
           if (waveState.current.queue.length > 0) {
             waveState.current.timeToNext =
@@ -228,12 +231,11 @@ export function useGameLoop(
         setVictory(true);
       }
 
-      // ── MECÂNICA CORRIGIDA: Movimentação dos Invasores e Fila Indiana ──
+      // ── Movimentação dos Invasores ──────────────────────────────────────────
       const path = gameMap.path;
       const nextEnemies: Enemy[] = [];
       let damageToPlayer = 0;
 
-      // Ordena os inimigos para processar quem está mais avançado no caminho primeiro
       const sortedEnemies = [...enemiesRef.current].sort(
         (a, b) => b.pathIndex - a.pathIndex,
       );
@@ -243,37 +245,44 @@ export function useGameLoop(
         if (targetPt) {
           const tx = targetPt.x * gameMap.tileSize + gameMap.tileSize / 2;
           const ty = targetPt.y * gameMap.tileSize + gameMap.tileSize / 2;
+
           const dx = tx - enemy.x;
           const dy = ty - enemy.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          // 1. Checa colisão com qualquer célula de defesa (torre) no mesmo quadrado
           const blockingTower = towersRef.current.find((t) => {
             const tdx = enemy.x - t.x;
             const tdy = enemy.y - t.y;
             return Math.sqrt(tdx * tdx + tdy * tdy) < 32;
           });
 
-          // 2. Checa colisão com o inimigo imediatamente à frente para empacar na fila
           let blockedByEnemy = false;
           if (idx > 0) {
             const frontEnemy = sortedEnemies[idx - 1];
             const edx = frontEnemy.x - enemy.x;
             const edy = frontEnemy.y - enemy.y;
             const distToFront = Math.sqrt(edx * edx + edy * edy);
-            // Se o inimigo da frente estiver empacado e muito perto, este também trava
+
             if (distToFront < 28 && frontEnemy.isBlocked) {
               blockedByEnemy = true;
             }
           }
 
+          const nearby = sortedEnemies.filter((other) => {
+            if (other.id === enemy.id) return false;
+            const mdx = other.x - enemy.x;
+            const mdy = other.y - enemy.y;
+            return Math.sqrt(mdx * mdx + mdy * mdy) < 80;
+          });
+
+          enemy.mutationPower = Math.min(2.5, (nearby.length + 1) * 0.18);
+
           if (blockingTower || blockedByEnemy) {
-            // Empaca o movimento
             enemy.isBlocked = true;
           } else {
-            // Caminha normalmente se o percurso estiver livre
             enemy.isBlocked = false;
             const speed = enemy.def.speed * 30 * (dt / 1000);
+
             if (dist <= speed) {
               enemy.x = tx;
               enemy.y = ty;
@@ -283,12 +292,15 @@ export function useGameLoop(
               enemy.y += (dy / dist) * speed;
             }
           }
+
           nextEnemies.push(enemy);
         } else {
-          damageToPlayer += 10;
+          // Inimigo chegou ao fim - causa dano baseado no reward
+          const damageAmount = enemy.def.reward;
+          damageToPlayer += damageAmount;
         }
       });
-      // Restaura a referência atualizada dos inimigos com as colisões de movimento processadas
+
       enemiesRef.current = nextEnemies;
 
       if (damageToPlayer > 0) {
@@ -306,7 +318,6 @@ export function useGameLoop(
       setTowers((prevTowers) => {
         const dead = new Set<string>();
         const ts = prevTowers.map((tower) => {
-          // Quantidade de vírus batendo ativamente nessa torre específica
           let activeAttackers = 0;
           enemiesRef.current.forEach((e) => {
             const dx = e.x - tower.x;
@@ -316,16 +327,15 @@ export function useGameLoop(
             }
           });
 
-          // Dano cumulativo: quanto mais vírus empacados nela, mais rápido ela perde vida
-          const proximityDmg =
-            activeAttackers * ENEMY_TOWER_DAMAGE * (dt / 1000);
-          const newHp = Math.max(0, tower.hp - proximityDmg);
+          const rawDamage = activeAttackers * ENEMY_TOWER_DAMAGE * (dt / 1000);
+          const armor = tower.armor ?? 0.2;
+          const finalDamage = rawDamage * (1 - armor);
+          const newHp = Math.max(0, tower.hp - finalDamage);
+
           if (newHp <= 0) {
             dead.add(tower.id);
-            return tower;
           }
 
-          // Recarga e execução do ataque das defesas
           if (tower.attackAnim && tower.attackAnim > 0) tower.attackAnim -= dt;
           if (tower.lastAttack > 0) tower.lastAttack -= dt;
           if (tower.lastAttack <= 0) {
@@ -441,8 +451,14 @@ export function useGameLoop(
           y: gridY * gameMap.tileSize + gameMap.tileSize / 2,
           def,
           lastAttack: 0,
-          hp: def.maxHp || 150,
-          maxHp: def.maxHp || 150, // Vincula à vida customizável do constants.ts
+          hp: def.maxHp || 250,
+          maxHp: def.maxHp || 250,
+          armor:
+            def.type === "macrofago"
+              ? 0.35
+              : def.type === "memoria"
+                ? 0.25
+                : 0.15,
         },
       ]);
     }
